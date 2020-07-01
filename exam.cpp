@@ -1,3 +1,5 @@
+
+
 #ifndef __AVLTREE_HPP__
 #define __AVLTREE_HPP__
 
@@ -69,10 +71,10 @@ private:
     T data;
     balance_type balance;
     node *left, *right, *parent;
-    int weight;
+    int weightl;
 
     node(const T &x, node *p = nullptr)
-        : data(x), balance(EH), left(nullptr), right(nullptr), parent(p), weight(0) {}
+        : data(x), balance(EH), left(nullptr), right(nullptr), parent(p), weightl(1) {}
   };
 
   // Returns a node's left child (if sign < 0) or right child (otherwise).
@@ -111,6 +113,7 @@ private:
     n->left = copy(t->left, n);
     n->right = copy(t->right, n);
     n->balance = t->balance;
+    n->weightl = t->weightl;
     return n;
   }
 
@@ -160,13 +163,13 @@ private:
   static node *insert(node *t, const T &x) {
     while (true) {
       if (x < t->data) {
-        t->weight++;
+        t->weightl++;
         if (t->left == nullptr)
           return (t->left = new node(x, t));
         else
           t = t->left;
       } else if (x > t->data) {
-        t->weight++;
+        //t->weight++;
         if (t->right == nullptr)
           return (t->right = new node(x, t));
         else
@@ -370,10 +373,12 @@ private:
 
     child(B, +sign) = A;
     B->parent = P;
-
-    int tempweight = A->weight;
-    A->weight = A->weight - B->weight + E->weight;
-    B->weight = tempweight;
+if (sign > 0 ) {
+  A->weightl =  E->weightl + 1; 
+}
+if (sign < 0 ){
+  B->weightl = A->weightl + 1;
+}
 
     if (E) E->parent = A;
     replace_child(P, A, B);
@@ -438,11 +443,16 @@ private:
     E->parent = P;
     E->balance = EH;
 
-    int Atempweight = A->weight;
+    
+    if(sign > 0){
+      E->weightl = B->weightl +1;
+      A->weightl = G->weightl +1;
+    }
 
-    A->weight = A->weight - B->weight + G->weight;
-    B->weight = B->weight - E->weight + F->weight;
-    E->weight = Atempweight;
+    if(sign < 0){
+      E->weightl = A->weightl+1;
+      B->weightl = F->weightl+1;
+    }
 
 
     if (G != nullptr) G->parent = A;
@@ -506,11 +516,24 @@ private:
     return t;
   }
 
+  static node *lookupremove(node *t, const T &x) {
+    while (t != nullptr)
+      if (x < t->data){
+        t->weightl--;
+        t = t->left;
+      }else if (x > t->data){
+        //t->weight--;
+        t = t->right;
+      }else
+        break;
+    return t;
+  }
+
 public:
   // Removes key x from the tree, if it exists, and returns true.
   // If it does not exist, it does nothing and returns false.
   bool remove(const T& x) {
-    node *t = lookup(root, x);
+    node *t = lookupremove(root, x);
     if (t == nullptr) return false;
     remove(t);
     delete t;
@@ -593,11 +616,17 @@ private:
   		 */
   		ret = Y;
   		left_deleted_ret = false;
+
+      //Y->weight = X ->weight -1;
+        Y->weightl = X->weightl;
   	} else {
   		node *Q;
   		do {
+        Y->weightl--;
+
   			Q = Y;
   			Y = Y->left;
+
   		} while (Y->left != nullptr);
 
   		/*
@@ -621,6 +650,7 @@ private:
   		if (Q->left != nullptr) Q->left->parent = Q;
   		Y->right = X->right;
   		X->right->parent = Y;
+      Y->weightl = X->weightl;
   		ret = Q;
   		left_deleted_ret = true;
   	}
@@ -759,16 +789,47 @@ private:
   	if (p != nullptr) left_deleted_ret = (t == p->left);
   	return p;
   }
-  public:
-  Iterator<T> rank(int n){
 
+ /* node *rankhelp(int n , node *t){
+    
+    
+     if (n < 0 || n > size()) return nullptr;
+     
+     if (n == t->weightl){
+        return t;
+     }
+     if (n < t->weightl){
+       return rankhelp(n,  t->left);
+     }
+     if(n > t->weightl){
+       return rankhelp(n - t->weightl,t->right);
+     }
   }
+  public:
+
+
+  Iterator<T> rank(int n){
+    if (n < 0 || n > size()) return end();
+    node *p ;
+    p = root;
+    return Iterator<T>(new TreeIteratorImpl(rankhelp(n,p)));
+
+  }*/
+  public:
+Iterator<T> rank(int n){
+  if (n < 0) return end();
+  node *t =this-> root;
+  while (n != (t->weightl)){
+    if (n < t -> weightl) t = t->left;
+    else{
+      n = n-(t->weightl);
+      t = t -> right;
+    }
+  }
+  return Iterator<T>(new TreeIteratorImpl(t));
+}
+
 };
 
 #endif
 
-#include <iostream>
-using namespace std;
-int main(){
-  cout<<"Ho";
-}
