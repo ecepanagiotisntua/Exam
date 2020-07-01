@@ -69,9 +69,10 @@ private:
     T data;
     balance_type balance;
     node *left, *right, *parent;
+    int weight;
 
     node(const T &x, node *p = nullptr)
-        : data(x), balance(EH), left(nullptr), right(nullptr), parent(p) {}
+        : data(x), balance(EH), left(nullptr), right(nullptr), parent(p), weight(0) {}
   };
 
   // Returns a node's left child (if sign < 0) or right child (otherwise).
@@ -100,6 +101,7 @@ private:
   // The tree's fields.
   node *root;
   int the_size;
+  
 
   // Recursively copies the subtree pointed to by t and returns an
   // identical subtree.  The root of the copy will have p as its parent.
@@ -158,11 +160,13 @@ private:
   static node *insert(node *t, const T &x) {
     while (true) {
       if (x < t->data) {
+        t->weight++;
         if (t->left == nullptr)
           return (t->left = new node(x, t));
         else
           t = t->left;
       } else if (x > t->data) {
+        t->weight++;
         if (t->right == nullptr)
           return (t->right = new node(x, t));
         else
@@ -367,6 +371,10 @@ private:
     child(B, +sign) = A;
     B->parent = P;
 
+    int tempweight = A->weight;
+    A->weight = A->weight - B->weight + E->weight;
+    B->weight = tempweight;
+
     if (E) E->parent = A;
     replace_child(P, A, B);
   }
@@ -429,6 +437,13 @@ private:
     child(E, -sign) = B;
     E->parent = P;
     E->balance = EH;
+
+    int Atempweight = A->weight;
+
+    A->weight = A->weight - B->weight + G->weight;
+    B->weight = B->weight - E->weight + F->weight;
+    E->weight = Atempweight;
+
 
     if (G != nullptr) G->parent = A;
     if (F != nullptr) F->parent = B;
@@ -744,6 +759,16 @@ private:
   	if (p != nullptr) left_deleted_ret = (t == p->left);
   	return p;
   }
+  public:
+  Iterator<T> rank(int n){
+
+  }
 };
 
 #endif
+
+#include <iostream>
+using namespace std;
+int main(){
+  cout<<"Ho";
+}
