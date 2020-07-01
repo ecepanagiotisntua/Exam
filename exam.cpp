@@ -1,5 +1,6 @@
 
-
+//#include <iostream>
+//using namespace std;
 #ifndef __AVLTREE_HPP__
 #define __AVLTREE_HPP__
 
@@ -8,6 +9,7 @@
 // It should not be here, just the #include...
 // If you are submitting to the grader, don't touch it!
 #include "container.hpp"
+
 #endif
 
 /* Reference implementation of AVL trees in C++, used in the course
@@ -73,8 +75,8 @@ private:
     node *left, *right, *parent;
     int weightl;
 
-    node(const T &x, node *p = nullptr)
-        : data(x), balance(EH), left(nullptr), right(nullptr), parent(p), weightl(1) {}
+    node(const T &x, node *p = nullptr, int w = 0)
+        : data(x), balance(EH), left(nullptr), right(nullptr), parent(p), weightl(w) {}
   };
 
   // Returns a node's left child (if sign < 0) or right child (otherwise).
@@ -169,7 +171,7 @@ private:
         else
           t = t->left;
       } else if (x > t->data) {
-        //t->weight++;
+     
         if (t->right == nullptr)
           return (t->right = new node(x, t));
         else
@@ -374,9 +376,13 @@ private:
     child(B, +sign) = A;
     B->parent = P;
 if (sign > 0 ) {
+  if(E != nullptr){
   A->weightl =  E->weightl + 1; 
+}else A->weightl = 1;
 }
+
 if (sign < 0 ){
+  
   B->weightl = A->weightl + 1;
 }
 
@@ -446,14 +452,16 @@ if (sign < 0 ){
     
     if(sign > 0){
       E->weightl = B->weightl +1;
+      if(G != nullptr){
       A->weightl = G->weightl +1;
+     }else A->weightl = 1;
     }
-
     if(sign < 0){
       E->weightl = A->weightl+1;
+      if(F != nullptr){
       B->weightl = F->weightl+1;
+    }else B->weightl = 1;
     }
-
 
     if (G != nullptr) G->parent = A;
     if (F != nullptr) F->parent = B;
@@ -533,8 +541,9 @@ public:
   // Removes key x from the tree, if it exists, and returns true.
   // If it does not exist, it does nothing and returns false.
   bool remove(const T& x) {
-    node *t = lookupremove(root, x);
+    node *t = lookup(root, x);
     if (t == nullptr) return false;
+    t = lookupremove(root, x);
     remove(t);
     delete t;
     --the_size;
@@ -647,7 +656,8 @@ private:
   		 */
 
   		Q->left = Y->right;
-  		if (Q->left != nullptr) Q->left->parent = Q;
+  		if (Q->left != nullptr){ Q->left->parent = Q; Q->weightl = Q->left->weightl+1;}
+      else Q->weightl = 1;
   		Y->right = X->right;
   		X->right->parent = Y;
       Y->weightl = X->weightl;
@@ -817,15 +827,17 @@ private:
   }*/
   public:
 Iterator<T> rank(int n){
-  if (n < 0) return end();
+  if (n < 0 || n > size()) return end();
+  if (size() == 0) return end();
   node *t =this-> root;
-  while (n != (t->weightl)){
-    if (n < t -> weightl) t = t->left;
-    else{
+  while (n != (t->weightl)&& t != nullptr){
+    if (n < t -> weightl ) t = t->left;
+    else if(n > t ->weightl ){
       n = n-(t->weightl);
       t = t -> right;
     }
   }
+ // cout<< t->data<<endl;
   return Iterator<T>(new TreeIteratorImpl(t));
 }
 
@@ -833,3 +845,77 @@ Iterator<T> rank(int n){
 
 #endif
 
+#include <iostream>
+#include <limits>
+#include <string>
+
+
+
+using namespace std;
+
+// Simple driver program for testing the AVL tree implementation.
+// It starts with an empty tree and reads from stdin commands of the form:
+//
+//   i key   insert key
+//   l key   prints "Y" if key was found, "N" if it was not
+//   r key   removes key, if it exists
+//   s       prints the tree size, i.e., number of nodes
+//   c       clears the tree, i.e., removes all of its nodes
+//   p       prints the tree's elements using in-order traversal
+//
+// All keys are integer numbers.
+
+int main() {
+  avltree<int> t;
+  char op;
+  while (cin >> op) {
+    switch (op) {
+      case 'k':{
+        int n;
+        cin >> n;
+        t.rank(n);
+        break;
+      }
+      case 'i': {
+        int key;
+        cin >> key;
+        t.insert(key);
+        break;
+      }
+      case 'l': {
+        int key;
+        cin >> key;
+        auto i = t.lookup(key);
+        cout << (i == t.end() ? "N" : "Y") << endl;
+        break;
+      }
+      case 'r': {
+        int key;
+        cin >> key;
+        t.remove(key);
+        break;
+      }
+      case 's': {
+        cout << t.size() << endl;
+        break;
+      }
+      case 'c': {
+        t.clear();
+        break;
+      }
+      case 'p': {
+        bool sep = false;
+        for (int x : t) {
+          cout << (sep ? " " : "") << x;
+          sep = true;
+        }
+        cout << endl;
+        break;
+      }
+      default: {
+        cerr << "Unknown operation: " << op << endl;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+      }
+    }
+  }
+}
