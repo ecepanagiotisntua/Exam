@@ -1,6 +1,6 @@
 
-//#include <iostream>
-//using namespace std;
+#include <iostream>
+using namespace std;
 #ifndef __AVLTREE_HPP__
 #define __AVLTREE_HPP__
 
@@ -393,18 +393,23 @@ static bool lookupinsert(node *t, const T &x) {
 
     child(B, +sign) = A;
     B->parent = P;
+
+
 if (sign > 0 ) {
+
+
   if (E!=nullptr){
   int temp = A->weight;
   A->weight = A->weight + E->weight - B->weight;
   B->weight = temp;
   }else{
     int temp = A->weight;
-    A->weight = A->weight - B->weight;
+    A->weight = A->weight - B->weight-1;
     B->weight = temp;
   }
+
   if(E != nullptr){
-  A->weightl =  E->weightl + 1; 
+  A->weightl =  E->weight + 1; 
 }else A->weightl = 0;
 
 
@@ -419,11 +424,11 @@ if (sign < 0 ){
   B->weight = temp;
   }else{
     int temp = A->weight;
-    A->weight = A->weight - B->weight;
+    A->weight = A->weight - B->weight - 1;
     B->weight = temp;
   }
   
-  B->weightl = A->weightl + 1;
+  B->weightl = A->weight + 1;
 }
 
     if (E) E->parent = A;
@@ -500,17 +505,17 @@ if (sign < 0 ){
       }else if(G!=nullptr&&F==nullptr){
         int temp = A->weight;
       A->weight = A->weight - B->weight + G->weight;
-      B->weight = B->weight - E->weight ;
+      B->weight = B->weight - E->weight - 1;
       E->weight = temp;
       }else if(G==nullptr&&F!=nullptr){
         int temp = A->weight;
-      A->weight = A->weight - B->weight ;
+      A->weight = A->weight - B->weight - 1;
       B->weight = B->weight - E->weight + F->weight;
       E->weight = temp;
       }else if(G==nullptr&&F==nullptr){
         int temp = A->weight;
-      A->weight = A->weight - B->weight ;
-      B->weight = B->weight - E->weight ;
+      A->weight = A->weight - B->weight - 1;
+      B->weight = B->weight - E->weight - 1;
       E->weight = temp;
       }
 
@@ -533,17 +538,17 @@ if (sign < 0 ){
       }else if(G!=nullptr&&F==nullptr){
         int temp = A->weight;
       A->weight = A->weight - B->weight + G->weight;
-      B->weight = B->weight - E->weight ;
+      B->weight = B->weight - E->weight - 1;
       E->weight = temp;
       }else if(G==nullptr&&F!=nullptr){
         int temp = A->weight;
-      A->weight = A->weight - B->weight ;
+      A->weight = A->weight - B->weight - 1;
       B->weight = B->weight - E->weight + F->weight;
       E->weight = temp;
       }else if(G==nullptr&&F==nullptr){
         int temp = A->weight;
-      A->weight = A->weight - B->weight ;
-      B->weight = B->weight - E->weight ;
+      A->weight = A->weight - B->weight - 1;
+      B->weight = B->weight - E->weight - 1;
       E->weight = temp;
       }
 
@@ -924,7 +929,6 @@ private:
 
   }*/
   public:
-  
 Iterator<T> rank(int n){
   if (n < 0 || n >= size()) return end();
 
@@ -932,7 +936,7 @@ Iterator<T> rank(int n){
 
   node *t =this-> root;
   if (n == t ->weightl ){
-    //cout<< t->data<< " "<<t->weightl<<endl;
+   // cout<< t->data<< " "<<t->weightl<<" "<<t->weight<<endl;
 return Iterator<T>(new TreeIteratorImpl(t));
   
   }
@@ -941,9 +945,10 @@ return Iterator<T>(new TreeIteratorImpl(t));
     else if(n > t ->weightl ){
       n = n-1-(t->weightl);
       t = t -> right;
+  
     }
   }
-  //cout<< t->data<< " " <<t->weightl<<endl;
+ // cout<< t->data<< " " <<t->weightl<<" "<<t->weight<<endl;
   return Iterator<T>(new TreeIteratorImpl(t));
 }
 
