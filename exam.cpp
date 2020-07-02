@@ -74,9 +74,10 @@ private:
     balance_type balance;
     node *left, *right, *parent;
     int weightl;
+    int weight;
 
-    node(const T &x, node *p = nullptr, int w = 0)
-        : data(x), balance(EH), left(nullptr), right(nullptr), parent(p), weightl(w) {}
+    node(const T &x, node *p = nullptr, int wl = 0, int w = 0)
+        : data(x), balance(EH), left(nullptr), right(nullptr), parent(p), weightl(wl), weight(0) {}
   };
 
   // Returns a node's left child (if sign < 0) or right child (otherwise).
@@ -116,6 +117,7 @@ private:
     n->right = copy(t->right, n);
     n->balance = t->balance;
     n->weightl = t->weightl;
+    n->weight = t->weight;
     return n;
   }
 
@@ -160,24 +162,40 @@ public:
   }
 
 private:
+static bool lookupinsert(node *t, const T &x) {
+    while (t != nullptr){
+      if (x < t->data)
+        t = t->left;
+      else if (x > t->data)
+        t = t->right;
+      else
+        break;
+    }
+    if (t == nullptr) return false;
+    else return true;
+  }
   // Insert x in the subtree pointed to by t.
   // Returns the new node, if it was inserted, otherwise nullptr.
   static node *insert(node *t, const T &x) {
+    if (lookupinsert(t, x)) return nullptr;
+    else {
     while (true) {
       if (x < t->data) {
+        t->weight++;
         t->weightl++;
         if (t->left == nullptr)
           return (t->left = new node(x, t));
         else
           t = t->left;
       } else if (x > t->data) {
-     
+        t->weight++;
         if (t->right == nullptr)
           return (t->right = new node(x, t));
         else
           t = t->right;
       } else
         return nullptr;
+    }
     }
   }
 
@@ -376,12 +394,34 @@ private:
     child(B, +sign) = A;
     B->parent = P;
 if (sign > 0 ) {
+  if (E!=nullptr){
+  int temp = A->weight;
+  A->weight = A->weight + E->weight - B->weight;
+  B->weight = temp;
+  }else{
+    int temp = A->weight;
+    A->weight = A->weight - B->weight;
+    B->weight = temp;
+  }
   if(E != nullptr){
   A->weightl =  E->weightl + 1; 
-}else A->weightl = 1;
+}else A->weightl = 0;
+
+
 }
 
+
 if (sign < 0 ){
+
+  if (E!=nullptr){
+  int temp = A->weight;
+  A->weight = A->weight + E->weight - B->weight;
+  B->weight = temp;
+  }else{
+    int temp = A->weight;
+    A->weight = A->weight - B->weight;
+    B->weight = temp;
+  }
   
   B->weightl = A->weightl + 1;
 }
@@ -451,17 +491,73 @@ if (sign < 0 ){
 
     
     if(sign > 0){
-      E->weightl = B->weightl +1;
+      if (G!=nullptr&&F!=nullptr){
+
+      int temp = A->weight;
+      A->weight = A->weight - B->weight + G->weight;
+      B->weight = B->weight - E->weight + F->weight;
+      E->weight = temp;
+      }else if(G!=nullptr&&F==nullptr){
+        int temp = A->weight;
+      A->weight = A->weight - B->weight + G->weight;
+      B->weight = B->weight - E->weight ;
+      E->weight = temp;
+      }else if(G==nullptr&&F!=nullptr){
+        int temp = A->weight;
+      A->weight = A->weight - B->weight ;
+      B->weight = B->weight - E->weight + F->weight;
+      E->weight = temp;
+      }else if(G==nullptr&&F==nullptr){
+        int temp = A->weight;
+      A->weight = A->weight - B->weight ;
+      B->weight = B->weight - E->weight ;
+      E->weight = temp;
+      }
+
+     if(F != nullptr)
+      E->weightl =E->weightl+ B->weightl +1;
+      else E->weightl = B->weightl +1;
       if(G != nullptr){
-      A->weightl = G->weightl +1;
-     }else A->weightl = 1;
+      A->weightl = G->weight +1;
+     }else A->weightl = 0;
     }
+
     if(sign < 0){
-      E->weightl = A->weightl+1;
+
+      if (G!=nullptr&&F!=nullptr){
+
+      int temp = A->weight;
+      A->weight = A->weight - B->weight + G->weight;
+      B->weight = B->weight - E->weight + F->weight;
+      E->weight = temp;
+      }else if(G!=nullptr&&F==nullptr){
+        int temp = A->weight;
+      A->weight = A->weight - B->weight + G->weight;
+      B->weight = B->weight - E->weight ;
+      E->weight = temp;
+      }else if(G==nullptr&&F!=nullptr){
+        int temp = A->weight;
+      A->weight = A->weight - B->weight ;
+      B->weight = B->weight - E->weight + F->weight;
+      E->weight = temp;
+      }else if(G==nullptr&&F==nullptr){
+        int temp = A->weight;
+      A->weight = A->weight - B->weight ;
+      B->weight = B->weight - E->weight ;
+      E->weight = temp;
+      }
+
+
+
+      if (G!= nullptr)
+      E->weightl = E->weightl +A->weightl+1;
+      else E->weightl = A->weightl +1 ;
       if(F != nullptr){
-      B->weightl = F->weightl+1;
-    }else B->weightl = 1;
+      B->weightl = F->weight+1;
+    }else B->weightl = 0;
     }
+
+
 
     if (G != nullptr) G->parent = A;
     if (F != nullptr) F->parent = B;
@@ -527,10 +623,11 @@ private:
   static node *lookupremove(node *t, const T &x) {
     while (t != nullptr)
       if (x < t->data){
+        t->weight--;
         t->weightl--;
         t = t->left;
       }else if (x > t->data){
-        //t->weight--;
+        t->weight--;
         t = t->right;
       }else
         break;
@@ -626,11 +723,12 @@ private:
   		ret = Y;
   		left_deleted_ret = false;
 
-      //Y->weight = X ->weight -1;
+        Y->weight = X ->weight -1;
         Y->weightl = X->weightl;
   	} else {
   		node *Q;
   		do {
+        Y->weight--;
         Y->weightl--;
 
   			Q = Y;
@@ -656,8 +754,8 @@ private:
   		 */
 
   		Q->left = Y->right;
-  		if (Q->left != nullptr){ Q->left->parent = Q; Q->weightl = Q->left->weightl+1;}
-      else Q->weightl = 1;
+  		if (Q->left != nullptr){ Q->left->parent = Q; Q->weightl = Q->left->weightl+1; Q->weight = Q->left->weight+1;}
+      else {Q->weightl = 0; Q->weight = 0;}
   		Y->right = X->right;
   		X->right->parent = Y;
       Y->weightl = X->weightl;
@@ -826,18 +924,26 @@ private:
 
   }*/
   public:
+  
 Iterator<T> rank(int n){
-  if (n < 0 || n > size()) return end();
+  if (n < 0 || n >= size()) return end();
+
   if (size() == 0) return end();
+
   node *t =this-> root;
+  if (n == t ->weightl ){
+    //cout<< t->data<< " "<<t->weightl<<endl;
+return Iterator<T>(new TreeIteratorImpl(t));
+  
+  }
   while (n != (t->weightl)&& t != nullptr){
     if (n < t -> weightl ) t = t->left;
     else if(n > t ->weightl ){
-      n = n-(t->weightl);
+      n = n-1-(t->weightl);
       t = t -> right;
     }
   }
- // cout<< t->data<<endl;
+  //cout<< t->data<< " " <<t->weightl<<endl;
   return Iterator<T>(new TreeIteratorImpl(t));
 }
 
